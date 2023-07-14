@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Countdown</title>
+
+	<style>
+		html {
+			font: 100%/1.4 --system-ui, Helvetica, Arial, sans-serif;
+		}
+
+		#form {
+			margin-bottom: 5em;
+			display: flex;
+		}
+
+		#form input {
+			border: 1px solid #000;
+			padding: 0.2em;
+			font-size: 1.4em;
+			width: 40%;
+			margin-right: 0.5em;
+		}
+
+		#form button {
+			-webkit-appearance: none;
+			appearance: none;
+			border: 1px solid #000;
+			background: #000;
+			color: #fff;
+			padding: 0.2em;
+			font-size: 1.4em;
+		}
+
+		#time {
+			box-sizing: border-box;
+			display: block;
+			font-size: 35.5vw;
+			text-align: center;
+			line-height: 0.8;
+			padding: 1rem;
+		}
+	</style>
+</head>
+<body>
+
+	<div>
+		<div id="form">
+			<input type="number" id="minutes" placeholder="00" value="0" />
+			<input type="number" id="seconds" placeholder="00" value="30" />
+			<button id="start">Start</button>
+		</div>
+		<span id="time">00:00</span>
+	</div>
+
+	<script>
+		let timerHolder;
+
+		// code modiefied from: https://stackoverflow.com/a/20618517/3625228
+
+		function startTimer(duration, display) {
+			var timer = duration, minutes, seconds;
+			timerHolder = setInterval(function () {
+				minutes = parseInt(timer / 60, 10);
+				seconds = parseInt(timer % 60, 10);
+
+				minutes = minutes < 10 ? "0" + minutes : minutes;
+				seconds = seconds < 10 ? "0" + seconds : seconds;
+
+				display.textContent = minutes + ":" + seconds;
+
+				if (--timer < 0) {
+					console.log('done!');
+					notify();
+					//timer = duration;
+					clearInterval(timerHolder);
+				}
+			}, 1000);
+		}
+
+		function notify() {
+			if (Notification.permission !== 'granted')
+				Notification.requestPermission();
+			else {
+				var notification = new Notification('Countdown is done!', {
+					icon: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+					body: 'The time is up!',
+				});
+				notification.onclick = function() {
+					window.open('http://stackoverflow.com/a/13328397/1269037');
+				};
+			}
+		}
+
+		window.onload = function () {
+			var display = document.querySelector('#time');
+
+			document.querySelector('#start').addEventListener('click', function () {
+				const time = parseInt(document.querySelector('#minutes').value)*60 + parseInt(document.querySelector('#seconds').value);
+				console.log('go! seconds:', time);
+				
+				startTimer(time, display);
+				document.querySelector('#form').style.display = 'none';
+			});
+
+			// notifications
+			if (!Notification) {
+				alert('Desktop notifications not available in your browser. Try Chromium.');
+				return;
+			}
+
+			if (Notification.permission !== 'granted') {
+				Notification.requestPermission();
+			}
+		};
+	</script>
+</body>
+</html>
