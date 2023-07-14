@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8" />
 	<title>Countdown</title>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 	<style>
 		html {
@@ -10,7 +12,7 @@
 		}
 
 		#form {
-			margin-bottom: 5em;
+			margin-block-end: 5em;
 			display: flex;
 		}
 
@@ -19,7 +21,7 @@
 			padding: 0.2em;
 			font-size: 1.4em;
 			width: 40%;
-			margin-right: 0.5em;
+			margin-inline-end: 0.5em;
 		}
 
 		#form button {
@@ -53,35 +55,40 @@
 		<span id="time">00:00</span>
 	</div>
 
-	<script>
-		let timerHolder;
+	<script type="module">
+		// from https://codepen.io/SitePoint/pen/QpwRxz
 
-		// code modiefied from: https://stackoverflow.com/a/20618517/3625228
+		let endTime;
 
-		function startTimer(duration, display) {
-			var timer = duration, minutes, seconds;
-			timerHolder = setInterval(function () {
-				minutes = parseInt(timer / 60, 10);
-				seconds = parseInt(timer % 60, 10);
+		const display = document.querySelector('#time');
 
-				minutes = minutes < 10 ? "0" + minutes : minutes;
-				seconds = seconds < 10 ? "0" + seconds : seconds;
-
-				display.textContent = minutes + ":" + seconds;
-
-				if (--timer < 0) {
-					console.log('done!');
-					notify();
-					//timer = duration;
-					clearInterval(timerHolder);
-				}
-			}, 1000);
+		function getRemainingTime (deadline) {
+			const currentTime = new Date().getTime();
+			return deadline - currentTime;
 		}
 
-		function notify() {
-			if (Notification.permission !== 'granted')
-				Notification.requestPermission();
-			else {
+		function showTime () {
+			const remainingTime = getRemainingTime(endTime);
+
+			const seconds = Math.floor((remainingTime / 1000) % 60).toString().padStart(2, '0');
+			const minutes = Math.floor((remainingTime / (60 * 1000)) % 60).toString().padStart(2, '0');
+
+			// const hours = pad((remainingTime / (60 * 60 * 1000)) % 24);
+			// const days = pad(remainingTime / (24 * 60 * 60 * 1000));
+
+			display.textContent = minutes + ':' + seconds;
+
+			if (remainingTime >= 1000) {
+				requestAnimationFrame(showTime);
+			} else {
+				console.log('done!');
+				notify();
+			}
+		}
+
+		// http://stackoverflow.com/a/13328397/1269037
+		function notify () {
+			if (Notification.permission == 'granted') {
 				var notification = new Notification('Countdown is done!', {
 					icon: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
 					body: 'The time is up!',
@@ -93,25 +100,28 @@
 		}
 
 		window.onload = function () {
-			var display = document.querySelector('#time');
 
 			document.querySelector('#start').addEventListener('click', function () {
-				const time = parseInt(document.querySelector('#minutes').value)*60 + parseInt(document.querySelector('#seconds').value);
-				console.log('go! seconds:', time);
-				
-				startTimer(time, display);
+				const m = parseInt(document.querySelector('#minutes').value);
+				const s = parseInt(document.querySelector('#seconds').value);
+
+				endTime = new Date().getTime() + (m*60 + s) * 1000;
+
+				console.log('go! seconds:', m, s);
+
+				requestAnimationFrame(showTime);
 				document.querySelector('#form').style.display = 'none';
+
+				// notifications
+				if (!Notification) {
+					alert('Desktop notifications not available in your browser. Try Chromium.');
+					return;
+				} else {
+					if (Notification.permission !== 'granted') {
+						Notification.requestPermission();
+					}
+				}
 			});
-
-			// notifications
-			if (!Notification) {
-				alert('Desktop notifications not available in your browser. Try Chromium.');
-				return;
-			}
-
-			if (Notification.permission !== 'granted') {
-				Notification.requestPermission();
-			}
 		};
 	</script>
 </body>
